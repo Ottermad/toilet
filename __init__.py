@@ -1,20 +1,25 @@
-import requests
 import xml.etree.ElementTree as ET
+import urllib.request
 
 url = "https://data.tfl.gov.uk/tfl/syndication/feeds/stations-facilities.xml"
 
-r = requests.get(url)
+def get_data():
+    with urllib.request.urlopen(url) as response:
+        html = response.read()    
+    data = ""
+    data2 = html
+    root = ET.fromstring(data2)
 
-data = r.content
-root = ET.fromstring(data)
+    for station in root.iter("station"):
+        data += station.find("name").text#.decode("utf-8")
+        facilities = station.find("facilities")
+        data += "Has Toilets:"
+        if len(facilities) == 0:
+            data += "UNKNOWN"
+        for facility in facilities:
+            if facility.attrib["name"] == "Toilets":
+                data += facility.text#.decode("utf-8")
+        data += "\n"
+    return data
 
-f = open("data3", "a")
-for station in root.iter("station"):
-    print(station.find("name").text)
-    facilities = station.find("facilities")
-    print("Has Toilets:")
-    if len(facilities) == 0:
-        print("UNKNOWN")
-    for facility in facilities:
-        if facility.attrib["name"] == "Toilets":
-            print(facility.text)
+print(get_data())
